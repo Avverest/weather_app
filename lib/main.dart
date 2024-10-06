@@ -3,44 +3,50 @@ import 'package:weather/weather.dart';
 
 String weatherApiKey = 'da0c8c237c4e3ff54d091a5a6a80b21a';
 
-main() => runApp(const App());
+main() => runApp(MaterialApp(
+  title: 'Weather',
+  home: Scaffold(
+    appBar: AppBar(
+      title: const Text('Weather'),
+    ),
+    body: const Center(
+      child: App(),
+    )
+  )
+));
 
-class App extends StatelessWidget {
+
+
+class App extends StatefulWidget {
   const App({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const Directionality(
-      textDirection: TextDirection.ltr,
-      child: CustomWeather('Kazan'),
-    );
-  }
+  State<App> createState() => _App();
 }
 
-class CustomWeather extends StatefulWidget {
-  final String city;
-  const CustomWeather(this.city, {super.key});
-
-  @override
-  State<CustomWeather> createState() => _CustomWeatherState();
-}
-
-class _CustomWeatherState extends State<CustomWeather> {
-  final WeatherFactory wf = WeatherFactory(weatherApiKey);
+class _App extends State<App> {
+  bool _isVisible = false;
+  final TextEditingController _controller = TextEditingController();
+  final WeatherFactory wf = WeatherFactory(weatherApiKey, language: Language.ENGLISH);
   String _weatherData = 'Loading...';
-  bool _isLoading = true;
+  bool _isLoading = false;
 
-  Future<void> fetchWeather() async {
+  Future<void> fetchWeather(String city) async {
+    setState(() {
+      _isLoading = true;
+    });
     try {
-      Weather w = await wf.currentWeatherByCityName(widget.city);
+      Weather w = await wf.currentWeatherByCityName(city);
       print(w);
       setState(() {
+        _isVisible = true;
         _weatherData = '${w.temperature!.celsius}°C';
         _isLoading = false;
       });
     } catch (e) {
       print(e);
       setState(() {
+        _isVisible = false;
         _weatherData = 'Error fetching weather';
         _isLoading = false;
       });
@@ -50,21 +56,42 @@ class _CustomWeatherState extends State<CustomWeather> {
   @override
   void initState() {
     super.initState();
-    fetchWeather();
+    _controller.text = '';
   }
 
   @override
   Widget build(BuildContext context) {
-    return _isLoading
-        ? const Center(
-            child: SizedBox(
-            width: 30,
-            height: 30,
-            child: CircularProgressIndicator(),
-          ))
-        : Text(
-            _weatherData,
-            style: const TextStyle(fontSize: 20.0),
-          );
+    return Center(
+      child: !_isVisible ? Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 250,
+            child: TextField(
+              controller: _controller,
+              onChanged: (String value) {
+                setState(() {
+                  _controller.text = value;
+                });
+              },
+              decoration: const InputDecoration(labelText: 'Введите город'),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              fetchWeather(_controller.text);
+            },
+            child: _isLoading ? const SizedBox(
+              width: 10,
+              height: 10,
+              child: CircularProgressIndicator(),
+            ) : const Text('Погода!'),
+          ),
+        ],
+      ) : Text(
+        _weatherData,
+        style: const TextStyle(fontSize: 20.0),
+      ),
+    );
   }
 }
