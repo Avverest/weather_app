@@ -27,7 +27,7 @@ class App extends StatefulWidget {
 class _App extends State<App> {
   bool _isVisible = false;
   final TextEditingController _controller = TextEditingController();
-  final WeatherFactory wf = WeatherFactory(weatherApiKey, language: Language.ENGLISH);
+  final WeatherFactory wf = WeatherFactory(weatherApiKey, language: Language.RUSSIAN);
   String _weatherData = 'Loading...';
   bool _isLoading = false;
 
